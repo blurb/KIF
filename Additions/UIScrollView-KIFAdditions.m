@@ -32,7 +32,7 @@ MAKE_CATEGORIES_LOADABLE(UIScrollView_KIFAdditions)
     CGPoint offsetPoint = self.contentOffset;
     if (viewMaxX > scrollViewMaxX) {
         // The view is to the right of the view port, so scroll it just into view
-        offsetPoint.x = viewMaxX + frame.origin.x;
+        offsetPoint.x = viewMaxX + frame.origin.x - frame.size.width;
         needsUpdate = YES;
     } else if (viewMaxX < 0.0) {
         offsetPoint.x = viewFrame.origin.x;
@@ -41,7 +41,7 @@ MAKE_CATEGORIES_LOADABLE(UIScrollView_KIFAdditions)
     
     if (viewMaxY > scrollViewMaxY) {
         // The view is below the view port, so scroll it just into view
-        offsetPoint.y = viewMaxY + frame.origin.y;
+        offsetPoint.y = viewMaxY + frame.origin.y - frame.size.height;
         needsUpdate = YES;
     } else if (viewMaxY < 0.0) {
         offsetPoint.y = viewFrame.origin.y;
@@ -49,12 +49,12 @@ MAKE_CATEGORIES_LOADABLE(UIScrollView_KIFAdditions)
     }
     
     if (needsUpdate) {
-        if (offsetPoint.x != self.contentOffset.x && offsetPoint.y != self.contentOffset.y) {
-            offsetPoint = [self.window convertPoint:offsetPoint toView:self];
-        } else if (offsetPoint.y == self.contentOffset.y) {
-            offsetPoint = [self.window convertPoint:CGPointMake(offsetPoint.x, 0) toView:self];
-        } else if (offsetPoint.x == self.contentOffset.x) {
-            offsetPoint = [self.window convertPoint:CGPointMake(0, offsetPoint.y) toView:self];
+        CGPoint oldPoint = offsetPoint;
+        offsetPoint = [self.window convertPoint:offsetPoint toView:self];
+        if (oldPoint.y == self.contentOffset.y) {
+            offsetPoint.y = oldPoint.y;
+        } if (oldPoint.x == self.contentOffset.x) {
+            offsetPoint.x = oldPoint.x;
         }
         [self setContentOffset:offsetPoint animated:animated];
         CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.2, false);
