@@ -21,7 +21,7 @@ MAKE_CATEGORIES_LOADABLE(UIScrollView_KIFAdditions)
 - (void)scrollViewToVisible:(UIView *)view animated:(BOOL)animated;
 {
     BOOL needsUpdate = NO;
-    CGRect frame = [self.window convertRect:self.frame fromView:self.superview];
+    CGRect frame = [self.window convertRect:self.frame fromView:self];
     
     CGRect viewFrame = [self.window convertRect:view.frame fromView:view.superview];
     CGFloat viewMaxX = viewFrame.origin.x + viewFrame.size.width;
@@ -32,7 +32,7 @@ MAKE_CATEGORIES_LOADABLE(UIScrollView_KIFAdditions)
     CGPoint offsetPoint = self.contentOffset;
     if (viewMaxX > scrollViewMaxX) {
         // The view is to the right of the view port, so scroll it just into view
-        offsetPoint.x = frame.origin.x + viewFrame.size.width;
+        offsetPoint.x = viewMaxX + frame.origin.x;
         needsUpdate = YES;
     } else if (viewMaxX < 0.0) {
         offsetPoint.x = viewFrame.origin.x;
@@ -41,7 +41,7 @@ MAKE_CATEGORIES_LOADABLE(UIScrollView_KIFAdditions)
     
     if (viewMaxY > scrollViewMaxY) {
         // The view is below the view port, so scroll it just into view
-        offsetPoint.y = frame.origin.y + viewFrame.size.height;
+        offsetPoint.y = viewMaxY + frame.origin.y;
         needsUpdate = YES;
     } else if (viewMaxY < 0.0) {
         offsetPoint.y = viewFrame.origin.y;
@@ -49,7 +49,13 @@ MAKE_CATEGORIES_LOADABLE(UIScrollView_KIFAdditions)
     }
     
     if (needsUpdate) {
-        offsetPoint = [self.window convertPoint:offsetPoint toView:self.superview];
+        if (offsetPoint.x != self.contentOffset.x && offsetPoint.y != self.contentOffset.y) {
+            offsetPoint = [self.window convertPoint:offsetPoint toView:self];
+        } else if (offsetPoint.y == self.contentOffset.y) {
+            offsetPoint = [self.window convertPoint:CGPointMake(offsetPoint.x, 0) toView:self];
+        } else if (offsetPoint.x == self.contentOffset.x) {
+            offsetPoint = [self.window convertPoint:CGPointMake(0, offsetPoint.y) toView:self];
+        }
         [self setContentOffset:offsetPoint animated:animated];
         CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.2, false);
     }
