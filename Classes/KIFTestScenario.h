@@ -23,6 +23,7 @@
     NSMutableArray *steps;
     NSString *description;
     BOOL skippedByFilter;
+    BOOL skippedByFilterInvalid;
 }
 
 /*!
@@ -31,6 +32,13 @@
  @discussion This should be a thorough description of what the scenario is testing so that if the test fails, it is clear which test it was.
  */
 @property (nonatomic, retain) NSString *description;
+
+/*!
+ @property category
+ @abstract A category label for the scenario, defaults to "default"
+ @discussion This can be filtered using the KIF_SCENARIO_CATEGORY_FILTER
+ */
+@property (nonatomic, retain) NSString *category;
 
 /*!
  @property steps
@@ -42,7 +50,7 @@
 /*!
  @property skippedByFilter
  @abstract Whether this scenario is being skipped
- @discussion Set the KIF_SCENARIO_FILTER environment variable to skip all scenarios not matching the variable's value
+ @discussion Set the KIF_SCENARIO_FILTER environment variable to skip all scenarios not matching the variable's value, or KIF_SCENARIO_CATEGORY_FILTER to filter by regex category matching
  */
 @property (nonatomic, readonly) BOOL skippedByFilter;
 
@@ -54,6 +62,17 @@
  @discussion Creates a new instance of the scenario with a given description. As part of creating the instance, @link initializeSteps initializeSteps @/link will be called, so calling this method on a subclass of KIFTestScenario will return a fully initialized scenario.
  */
 + (id)scenarioWithDescription:(NSString *)description;
+
+
+/*!
+ @method scenarioWithDescription:category
+ @abstract Create a new scenario.
+ @param description A description of what the scenario is testing.
+ @param category A category label for the scenario
+ @result An initialized scenario.
+ @discussion Creates a new instance of the scenario with a given description and category. As part of creating the instance, @link initializeSteps initializeSteps @/link will be called, so calling this method on a subclass of KIFTestScenario will return a fully initialized scenario.
+ */
++ (id)scenarioWithDescription:(NSString *)description category:(NSString*)category;
 
 /*!
  @method initializeSteps;
