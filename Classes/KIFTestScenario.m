@@ -130,6 +130,10 @@ static NSString* kDefaultCategory = @"default";
         if (!skippedByFilter && categoryFilter) {
             skippedByFilter = ([category rangeOfString:categoryFilter options:NSRegularExpressionSearch].location == NSNotFound);
         }
+        NSString *categoryExcludeFilter = [[[NSProcessInfo processInfo] environment] objectForKey:@"KIF_SCENARIO_CATEGORY_EXCLUDE_FILTER"];
+        if (!skippedByFilter && categoryExcludeFilter) {
+            skippedByFilter = ([category rangeOfString:categoryExcludeFilter options:NSRegularExpressionSearch].location != NSNotFound);
+        }
     }
     return skippedByFilter;
 }
