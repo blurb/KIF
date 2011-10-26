@@ -743,7 +743,13 @@ static NSTimeInterval KIFTestStepDefaultTimeout = 10.0;
                 outputPath = [outputPath stringByAppendingPathComponent:[name stringByReplacingOccurrencesOfString:@"/" withString:@"_"]];
                 outputPath = [outputPath stringByAppendingPathExtension:@"png"];
                 
-                [UIImagePNGRepresentation(image) writeToFile:outputPath atomically:YES];
+                BOOL success = [UIImagePNGRepresentation(image) writeToFile:outputPath atomically:YES];
+                if (!success) {
+                    if (error) {
+                        *error = [[[NSError alloc] initWithDomain:@"KIFTest" code:KIFTestStepResultFailure userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:@"Failed to write screenshot \"%@\" to output path \"%@\".", name,outputPath], NSLocalizedDescriptionKey, nil]] autorelease];
+                    }
+                    return KIFTestStepResultFailure;
+                }
                 
                 return KIFTestStepResultSuccess;
             }];
