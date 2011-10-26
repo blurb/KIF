@@ -10,6 +10,8 @@
 #import "KIFTestScenario.h"
 #import "KIFTestStep.h"
 
+static NSString* kDefaultCategory = @"default";
+
 @interface KIFTestScenario ()
 
 @property (nonatomic, readwrite, retain) NSArray *steps;
@@ -22,20 +24,24 @@
 @implementation KIFTestScenario
 
 @synthesize description;
+@synthesize category;
 @synthesize steps;
 @synthesize skippedByFilter;
 
 #pragma mark Static Methods
 
-+ (id)scenarioWithDescription:(NSString *)description
++ (id)scenarioWithDescription:(NSString *)description category:(NSString*)category
 {
     KIFTestScenario *scenario = [[self alloc] init];
     scenario.description = description;
-    NSString *filter = [[[NSProcessInfo processInfo] environment] objectForKey:@"KIF_SCENARIO_FILTER"];
-    if (filter) {
-        scenario.skippedByFilter = ([description rangeOfString:filter options:NSRegularExpressionSearch].location == NSNotFound);
-    }
+    scenario.category = category;
+
     return [scenario autorelease];
+}
+
++ (id)scenarioWithDescription:(NSString *)description
+{
+    return [self scenarioWithDescription:description category:kDefaultCategory];
 }
 
 #pragma mark Initialization
@@ -54,6 +60,7 @@
 {
     self.steps = nil;
     self.description = nil;
+    self.category = nil;
     
     [super dealloc];
 }
@@ -89,11 +96,49 @@
     [steps addObjectsFromArray:inSteps];
 }
 
+-(void)setDescription:(NSString *)desc
+{
+    if (desc != description) {
+        [description release];
+        description = [desc retain];
+        
+        skippedByFilterInvalid = YES;
+    }
+}
+
+-(void)setCategory:(NSString *)c
+{
+    if (c != category) {
+        [category release];
+        category = [c retain];
+        
+        skippedByFilterInvalid = YES;
+    }
+}
+
+-(BOOL)skippedByFilter
+{
+    if (skippedByFilterInvalid) {
+        skippedByFilterInvalid = NO;
+        skippedByFilter = NO;
+        
+        NSString *filter = [[[NSProcessInfo processInfo] environment] objectForKey:@"KIF_SCENARIO_FILTER"];
+        if (filter) {
+            skippedByFilter = ([description rangeOfString:filter options:NSRegularExpressionSearch].location == NSNotFound);
+        }
+        NSString *categoryFilter = [[[NSProcessInfo processInfo] environment] objectForKey:@"KIF_SCENARIO_CATEGORY_FILTER"];
+        if (!skippedByFilter && categoryFilter) {
+            skippedByFilter = ([category rangeOfString:categoryFilter options:NSRegularExpressionSearch].location == NSNotFound);
+        }
+    }
+    return skippedByFilter;
+}
+
 #pragma mark Private Methods
 
 - (void)_initializeStepsIfNeeded
 {
-    if (!steps && !self.skippedByFilter) {
+    if (!steps) {
         self.steps = [NSMutableArray array];
         [self initializeSteps];
     }

@@ -215,12 +215,12 @@ static void releaseInstance()
 
 - (void)_performTestStep:(KIFTestStep *)step;
 {
-    NSAssert([step isKindOfClass:[KIFTestStep class]], @"step must be a KIFTestStep but was \"%@\".", NSStringFromClass([step class]));
-    
     if (!step) {
         [self _testingDidFinish];
         return;
     }
+    
+    NSAssert([step isKindOfClass:[KIFTestStep class]], @"step must be a KIFTestStep but was \"%@\".", NSStringFromClass([step class]));
     
     NSError *error = nil;
     KIFTestStepResult result = [step executeAndReturnError:&error];
@@ -444,7 +444,7 @@ static void releaseInstance()
 {
     KIFLogBlankLine();
     KIFLogSeparator();
-    NSString *reason = (scenario.skippedByFilter ? @"filter doesn't match description" : @"only running previously-failed scenarios");
+    NSString *reason = (scenario.skippedByFilter ? @"filter doesn't match description or category" : @"only running previously-failed scenarios");
     KIFLog(@"SKIPPING SCENARIO %d/%d (%@)", [self.scenarios indexOfObjectIdenticalTo:scenario] + 1, self.scenarios.count, reason);
     KIFLog(@"%@", scenario.description);
     KIFLogSeparator();
