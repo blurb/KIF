@@ -366,7 +366,8 @@ static void releaseInstance()
     UIGraphicsEndImageContext();
     
     outputPath = [outputPath stringByExpandingTildeInPath];
-    outputPath = [outputPath stringByAppendingPathComponent:[step.description stringByReplacingOccurrencesOfString:@"/" withString:@"_"]];
+    NSString* filename = [NSString stringWithFormat:@"%@.%@",self.currentScenario.description,step.description];
+    outputPath = [outputPath stringByAppendingPathComponent:[filename stringByReplacingOccurrencesOfString:@"/" withString:@"_"]];
     outputPath = [outputPath stringByAppendingPathExtension:@"png"];
     [UIImagePNGRepresentation(image) writeToFile:outputPath atomically:YES];
 }
