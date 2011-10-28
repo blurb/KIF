@@ -10,10 +10,12 @@
 #import "UIApplication-KIFAdditions.h"
 #import "LoadableCategory.h"
 #import "UIView-KIFAdditions.h"
-
+#import "KIFTestStep.h"
+#import <QuartzCore/QuartzCore.h>
 
 MAKE_CATEGORIES_LOADABLE(UIApplication_KIFAdditions)
 
+#define DEFAULT_SCREENSHOT_QUALITY .8
 
 @implementation UIApplication (KIFAdditions)
 
@@ -86,6 +88,63 @@ MAKE_CATEGORIES_LOADABLE(UIApplication_KIFAdditions)
     }
     
     return nil;
+}
+
+- (BOOL)captureScreenshotWithName:(NSString*)name error:(NSError**)error
+{
+    NSString *outputPath = [[[NSProcessInfo processInfo] environment] objectForKey:@"KIF_SCREENSHOTS"];
+    if (!outputPath) {
+        if (error) {
+            *error = [[[NSError alloc] initWithDomain:@"KIFTest" code:KIFTestStepResultFailure userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:@"Failed to capture screenshot \"%@\"; no output path set", name], NSLocalizedDescriptionKey, nil]] autorelease];
+        }
+        return FALSE;
+    }
+
+    NSArray *windows = [self windows];
+    if (windows.count == 0) {
+        if (error) {
+            *error = [[[NSError alloc] initWithDomain:@"KIFTest" code:KIFTestStepResultFailure userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:@"Failed to capture screenshot \"%@\"; no windows found.", name], NSLocalizedDescriptionKey, nil]] autorelease];
+        }
+        return FALSE;
+    }
+
+    UIGraphicsBeginImageContext([[windows objectAtIndex:0] bounds].size);
+    for (UIWindow *window in windows) {
+        [window.layer renderInContext:UIGraphicsGetCurrentContext()];
+    }
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+
+    NSString *outputFormat = [[[[NSProcessInfo processInfo] environment] objectForKey:@"KIF_SCREENSHOT_FORMAT"] lowercaseString];
+
+    // validate that outputFormat is png or jpg
+    if ([outputFormat rangeOfString:@"png|jpg" options:NSRegularExpressionSearch].location == NSNotFound)
+        outputFormat = @"png";
+        
+    outputPath = [outputPath stringByExpandingTildeInPath];
+    outputPath = [outputPath stringByAppendingPathComponent:[name stringByReplacingOccurrencesOfString:@"/" withString:@"_"]];
+    outputPath = [outputPath stringByAppendingPathExtension:outputFormat];
+    
+    NSData* rawData = nil;
+    if ([outputFormat isEqualToString:@"jpg"]) {
+        NSString* screenshotQuality = [[[NSProcessInfo processInfo] environment] objectForKey:@"KIF_SCREENSHOT_QUALITY"];
+        CGFloat quality = screenshotQuality ? [screenshotQuality floatValue] : DEFAULT_SCREENSHOT_QUALITY;
+        if (quality < 0)
+            quality = 0;
+        if (quality > 1)
+            quality = 1;
+        rawData = UIImageJPEGRepresentation(image, quality);
+    } else {
+        rawData = UIImagePNGRepresentation(image);
+    }
+    
+    BOOL success = [rawData writeToFile:outputPath atomically:YES];
+    if (!success) {
+        if (error) {
+            *error = [[[NSError alloc] initWithDomain:@"KIFTest" code:KIFTestStepResultFailure userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:@"Failed to write screenshot \"%@\" to output path \"%@\".", name,outputPath], NSLocalizedDescriptionKey, nil]] autorelease];
+        }
+    }
+    return success;
 }
 
 @end
