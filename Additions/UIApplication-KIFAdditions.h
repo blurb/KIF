@@ -21,4 +21,6 @@
 - (UIWindow *)keyboardWindow;
 - (UIWindow *)pickerViewWindow;
 
+- (BOOL)captureScreenshotWithName:(NSString*)name error:(NSError**)error;
+
 @end
