@@ -11,6 +11,7 @@
 #import "KIFTestScenario.h"
 #import "KIFTestStep.h"
 #import "NSFileManager-KIFAdditions.h"
+#import "UIApplication-KIFAdditions.h"
 #import <QuartzCore/QuartzCore.h>
 
 
@@ -348,27 +349,13 @@ static void releaseInstance()
 
 - (void)_writeScreenshotForStep:(KIFTestStep *)step;
 {
+    NSError* error;
     NSString *outputPath = [[[NSProcessInfo processInfo] environment] objectForKey:@"KIF_SCREENSHOTS"];
-    if (!outputPath) {
+    if (!outputPath)
         return;
-    }
     
-    NSArray *windows = [[UIApplication sharedApplication] windows];
-    if (windows.count == 0) {
-        return;
-    }
-    
-    UIGraphicsBeginImageContext([[windows objectAtIndex:0] bounds].size);
-    for (UIWindow *window in windows) {
-        [window.layer renderInContext:UIGraphicsGetCurrentContext()];
-    }
-    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    
-    outputPath = [outputPath stringByExpandingTildeInPath];
-    outputPath = [outputPath stringByAppendingPathComponent:[step.description stringByReplacingOccurrencesOfString:@"/" withString:@"_"]];
-    outputPath = [outputPath stringByAppendingPathExtension:@"png"];
-    [UIImagePNGRepresentation(image) writeToFile:outputPath atomically:YES];
+    NSString* filename = [NSString stringWithFormat:@"%@.%@",self.currentScenario.description,step.description];
+    [[UIApplication sharedApplication] captureScreenshotWithName:filename error:&error]; 
 }
 
 #pragma mark Logging

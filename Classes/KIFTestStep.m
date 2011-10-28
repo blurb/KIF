@@ -710,49 +710,11 @@ static NSTimeInterval KIFTestStepDefaultTimeout = 10.0;
 {
     return [self  stepWithDescription:description  
                        executionBlock:^(KIFTestStep *step, NSError **error) {
-
-                NSString * outputPath = [[[NSProcessInfo processInfo] environment] objectForKey:@"KIF_SCREENSHOTS"];
-                
-                if (!outputPath) {
-                    outputPath = @"~/Documents";
-                    
-                    // /Users/<USER>/Library/Application Support/iPhone Simulator/<IOS_VERSION>/Applications/<APP_GUID>/Documents
-                    
-                }
-                
-                NSArray *windows = [[UIApplication sharedApplication] windows];
-                if (windows.count == 0) {
-                    
-                    if (error) {
-                        *error = [[[NSError alloc] initWithDomain:@"KIFTest" code:KIFTestStepResultFailure userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:@"Failed to capture screenshot \"%@\"; no windows found.", name], NSLocalizedDescriptionKey, nil]] autorelease];
-                    }
-                    
-                    return KIFTestStepResultFailure;
-                }
-                
-                UIGraphicsBeginImageContext([[windows objectAtIndex:0] bounds].size);
                            
-                for (UIWindow *window in windows) {
-                    [window.layer renderInContext:UIGraphicsGetCurrentContext()];
-                }
+                           BOOL success = [[UIApplication sharedApplication] captureScreenshotWithName:name error:error];
                            
-                UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-                UIGraphicsEndImageContext();
-                
-                outputPath = [outputPath stringByExpandingTildeInPath];
-                outputPath = [outputPath stringByAppendingPathComponent:[name stringByReplacingOccurrencesOfString:@"/" withString:@"_"]];
-                outputPath = [outputPath stringByAppendingPathExtension:@"png"];
-                
-                BOOL success = [UIImagePNGRepresentation(image) writeToFile:outputPath atomically:YES];
-                if (!success) {
-                    if (error) {
-                        *error = [[[NSError alloc] initWithDomain:@"KIFTest" code:KIFTestStepResultFailure userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:@"Failed to write screenshot \"%@\" to output path \"%@\".", name,outputPath], NSLocalizedDescriptionKey, nil]] autorelease];
-                    }
-                    return KIFTestStepResultFailure;
-                }
-                
-                return KIFTestStepResultSuccess;
-            }];
+                           return success ? KIFTestStepResultSuccess : KIFTestStepResultFailure;
+                    }];
 }
 
 #pragma mark Step Collections
