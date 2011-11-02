@@ -118,7 +118,7 @@ MAKE_CATEGORIES_LOADABLE(UIApplication_KIFAdditions)
     NSString *outputFormat = [[[[NSProcessInfo processInfo] environment] objectForKey:@"KIF_SCREENSHOT_FORMAT"] lowercaseString];
 
     // validate that outputFormat is png or jpg
-    if ([outputFormat rangeOfString:@"png|jpg" options:NSRegularExpressionSearch].location == NSNotFound)
+    if (!outputFormat || ([outputFormat rangeOfString:@"png|jpg" options:NSRegularExpressionSearch].location == NSNotFound))
         outputFormat = @"png";
         
     outputPath = [outputPath stringByExpandingTildeInPath];
