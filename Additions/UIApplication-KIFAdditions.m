@@ -108,9 +108,37 @@ MAKE_CATEGORIES_LOADABLE(UIApplication_KIFAdditions)
         return FALSE;
     }
 
-    UIGraphicsBeginImageContext([[windows objectAtIndex:0] bounds].size);
+    CGSize imageSize = [[UIScreen mainScreen] bounds].size;
+    CGRect statusBarFrame = [self statusBarFrame];
+    NSInteger statusBarHeight = self.statusBarHidden ? 0 : statusBarFrame.size.height;
+
+    imageSize.height -= statusBarHeight;
+    
+    UIGraphicsBeginImageContext(imageSize);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    
+
     for (UIWindow *window in windows) {
-        [window.layer renderInContext:UIGraphicsGetCurrentContext()];
+        if (![window respondsToSelector:@selector(screen)] || [window screen] == [UIScreen mainScreen]) {
+            CGContextSaveGState(context);
+            // Center the context around the window's anchor point
+            CGContextTranslateCTM(context, [window center].x, [window center].y);
+            // Apply the window's transform about the anchor point
+            CGContextConcatCTM(context, [window transform]);
+            
+            
+            // Offset by the portion of the bounds left of and above the anchor point
+            CGContextTranslateCTM(context,
+                                  -[window bounds].size.width * [[window layer] anchorPoint].x,
+                                  -[window bounds].size.height * [[window layer] anchorPoint].y - statusBarHeight);
+            
+            // Render the layer hierarchy to the current context
+            [[window layer] renderInContext:context];
+            
+            // Restore the context
+            CGContextRestoreGState(context); 
+
+        }
     }
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
