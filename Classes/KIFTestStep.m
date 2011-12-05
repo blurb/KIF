@@ -692,6 +692,8 @@ static NSTimeInterval KIFTestStepDefaultTimeout = 10.0;
         
         KIFTestCondition(tableView, error, @"Table view with label %@ not found", tableViewLabel);
         
+        [tableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionTop animated:NO];
+        [tableView layoutIfNeeded];
         UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
         CGRect cellFrame = [cell convertRect:cell.bounds toView:tableView];
         [tableView tapAtPoint:CGPointCenteredInRect(cellFrame)];
