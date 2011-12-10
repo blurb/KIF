@@ -458,6 +458,14 @@ static NSTimeInterval KIFTestStepDefaultTimeout = 10.0;
         
         UIView *view = [UIAccessibilityElement viewContainingAccessibilityElement:element];
         KIFTestWaitCondition(view, error, @"Cannot find view with accessibility label \"%@\"", label);
+        
+        // prevent the view from autocorrecting
+        UITextAutocorrectionType autoCorrect = -1;
+        if ([view isKindOfClass:[UITextField class]] || [view isKindOfClass:[UITextView class]]) {
+            UITextField *tF = (UITextField*)view;
+            autoCorrect = [tF autocorrectionType];
+            [tF setAutocorrectionType:UITextAutocorrectionTypeNo];
+        }
                 
         CGRect elementFrame = [view.window convertRect:element.accessibilityFrame toView:view];
         CGPoint tappablePointInElement = [view tappablePointInRect:elementFrame];
@@ -491,6 +499,11 @@ static NSTimeInterval KIFTestStepDefaultTimeout = 10.0;
             NSString *expected = [expectedResult ? expectedResult : text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
             NSString *actual = [[view performSelector:@selector(text)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
             KIFTestCondition([actual isEqualToString:expected], error, @"Failed to actually enter text \"%@\" in field; instead, it was \"%@\"", text, actual);
+        }
+        
+        // set correction back to what it was
+        if (autoCorrect != -1) {
+            [((UITextField*)view) setAutocorrectionType:autoCorrect];
         }
         
         return KIFTestStepResultSuccess;
