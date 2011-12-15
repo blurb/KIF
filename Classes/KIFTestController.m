@@ -347,6 +347,18 @@ static void releaseInstance()
     return nextScenario;
 }
 
+-(NSString*)normalizeFilename:(NSString*)filename
+{
+    NSData *asciiData = [filename dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES];
+    
+    NSString *asciiString = [[[NSString alloc] initWithData:asciiData encoding:NSASCIIStringEncoding] autorelease];
+    
+    NSCharacterSet *charactersToRemove = [NSCharacterSet characterSetWithCharactersInString:@" \"'"];
+    
+    return [[asciiString componentsSeparatedByCharactersInSet:charactersToRemove]
+                componentsJoinedByString:@"" ];
+}
+
 - (void)_writeScreenshotForStep:(KIFTestStep *)step;
 {
     NSError* error;
@@ -355,7 +367,8 @@ static void releaseInstance()
         return;
     
     NSString* filename = [NSString stringWithFormat:@"%@.%@",self.currentScenario.description,step.description];
-    [[UIApplication sharedApplication] captureScreenshotWithName:filename error:&error]; 
+    
+    [[UIApplication sharedApplication] captureScreenshotWithName:[self normalizeFilename:filename] error:&error]; 
 }
 
 #pragma mark Logging
